@@ -1,29 +1,14 @@
 (() => {
   "use strict";
-
-  const claims = Array.isArray(window.FONTEVIVA_CLAIMS) ? window.FONTEVIVA_CLAIMS : [];
   const form = document.querySelector("#search-form");
   const input = document.querySelector("#search-input");
+  const topicSelect = document.querySelector("#source-topic");
   const list = document.querySelector("#results-list");
   const empty = document.querySelector("#empty-state");
-  const count = document.querySelector("#result-count");
   const clearButton = document.querySelector("#clear-search");
-  const filterButtons = [...document.querySelectorAll(".filter-tab")];
-  const menuButton = document.querySelector("#menu-toggle");
-  const nav = document.querySelector(".topnav");
-  let query = "";
-  let filter = "all";
-
-  const searchCore = window.FonteVivaSearch;
-  if (!searchCore) throw new Error("O núcleo de busca FonteViva não foi carregado.");
-
-  function scoreClaim(claim, rawQuery) {
-    const searchable = [
-      claim.claim, claim.summary, claim.detail,
-      ...(claim.tags || []), ...(claim.sources || []).map((source) => source.label)
-    ].join(" ");
-    return searchCore.scoreText(rawQuery, searchable);
-  }
+  const summary = document.querySelector("#search-summary");
+  const searchButton = document.querySelector("#search-button");
+  let controller = null;
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -31,76 +16,83 @@
     })[char]);
   }
 
-  function renderCard(claim) {
-    const verdict = ["true", "false", "partial", "uncertain"].includes(claim.verdict) ? claim.verdict : "uncertain";
-    const sources = (claim.sources || []).map((source) =>
-      '<span class="source-chip">' + escapeHtml(source.label) + '</span>'
-    ).join("");
-    return '<article class="claim-card status-' + verdict + '">' +
-      '<div class="claim-status"><span class="status-bullet"></span>' + escapeHtml(claim.verdictLabel || "Sem veredito") + '</div>' +
-      '<div class="claim-content"><h3>' + escapeHtml(claim.claim) + '</h3>' +
-      '<p>' + escapeHtml(claim.summary) + '</p>' +
-      '<div class="claim-meta"><span>' + escapeHtml(claim.date || "Data não informada") + '</span><span class="meta-separator">/</span><span>' + escapeHtml(claim.evidence || "Nível não informado") + '</span></div>' +
-      '<div class="claim-sources">' + sources + '</div></div><span class="card-arrow" aria-hidden="true">↗</span></article>';
+  function safeExternalUrl(value) {
+    try {
+      const url = new URL(value);
+      return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+    } catch { return ""; }
   }
 
-  function render() {
-    const ranked = claims
-      .map((claim) => ({ claim, score: scoreClaim(claim, query) }))
-      .filter(({ claim, score }) => score > 0 && (filter === "all" || claim.verdict === filter))
-      .sort((a, b) => b.score - a.score);
-    list.innerHTML = ranked.map(({ claim }) => renderCard(claim)).join("");
-    empty.hidden = ranked.length > 0;
-    list.hidden = ranked.length === 0;
-    count.textContent = ranked.length + (ranked.length === 1 ? " registro" : " registros");
+  function renderResult(item) {
+    const url = safeExternalUrl(item.url);
+    if (!url) return "";
+    const title = escapeHtml(item.title || "Resultado sem título");
+    const snippet = escapeHtml(item.snippet || "O provedor não forneceu um resumo. Abra a página para conferir o conteúdo original.");
+    const domain = escapeHtml(item.domain || new URL(url).hostname);
+    const date = item.date ? '<span>Data: ' + escapeHtml(item.date) + '</span>' : '<span>Data não informada</span>';
+    const sourceType = escapeHtml(item.sourceType || "Fonte externa");
+    return '<article class="source-result">' +
+      '<div class="source-result-meta"><span class="source-kind">' + sourceType + '</span><span class="source-domain">' + domain + '</span>' + date + '</div>' +
+      '<h3>' + title + '</h3><p>' + snippet + '</p>' +
+      '<a class="source-open" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">Abrir fonte original ↗</a>' +
+      '</article>';
+  }
+
+  function showError(message) {
+    list.innerHTML = '<div class="search-error">' + escapeHtml(message) + '</div>';
+    list.hidden = false;
+    empty.hidden = true;
+    summary.textContent = "A pesquisa não foi concluída.";
+  }
+
+  async function searchWeb(query, topic) {
+    if (controller) controller.abort();
+    controller = new AbortController();
+    list.innerHTML = '<div class="search-loading">Consultando fontes externas e procurando páginas relevantes...</div>';
+    list.hidden = false;
+    empty.hidden = true;
+    summary.textContent = "Aguarde enquanto a busca é realizada.";
+    searchButton.disabled = true;
+    searchButton.setAttribute("aria-busy", "true");
+    try {
+      const params = new URLSearchParams({ q: query, topic });
+      const response = await fetch('/.netlify/functions/search?' + params.toString(), {
+        headers: { "Accept": "application/json" },
+        signal: controller.signal
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "O serviço de pesquisa retornou um erro.");
+      const items = Array.isArray(payload.results) ? payload.results : [];
+      list.innerHTML = items.map(renderResult).filter(Boolean).join("");
+      list.hidden = items.length === 0;
+      empty.hidden = items.length > 0;
+      summary.textContent = items.length
+        ? items.length + " resultado(s) recuperado(s) por " + (payload.provider || "provedor externo") + ". Prioridade: " + (payload.topicLabel || "fontes selecionadas") + "."
+        : "A pesquisa terminou sem resultados. Isso não significa que a alegação seja falsa.";
+    } catch (error) {
+      if (error.name === "AbortError") return;
+      showError(error.message || "Não foi possível consultar a pesquisa externa.");
+    } finally {
+      searchButton.disabled = false;
+      searchButton.removeAttribute("aria-busy");
+    }
   }
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    query = input.value;
-    render();
+    const query = input.value.trim().slice(0, 300);
+    if (!query) { input.focus(); return; }
+    searchWeb(query, topicSelect.value);
     document.querySelector("#resultados").scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
-  input.addEventListener("input", () => {
-    if (!input.value.trim() && query) {
-      query = "";
-      render();
-    }
-  });
-
-  filterButtons.forEach((button) => button.addEventListener("click", () => {
-    filter = button.dataset.filter || "all";
-    filterButtons.forEach((item) => {
-      const active = item === button;
-      item.classList.toggle("active", active);
-      item.setAttribute("aria-pressed", String(active));
-    });
-    render();
-  }));
-
   clearButton.addEventListener("click", () => {
+    if (controller) controller.abort();
     input.value = "";
-    query = "";
-    filter = "all";
-    filterButtons.forEach((item) => {
-      const active = item.dataset.filter === "all";
-      item.classList.toggle("active", active);
-      item.setAttribute("aria-pressed", String(active));
-    });
-    render();
+    list.innerHTML = "";
+    list.hidden = true;
+    empty.hidden = true;
+    summary.textContent = "Faça uma pesquisa para consultar documentos e páginas originais.";
     input.focus();
   });
-
-  menuButton.addEventListener("click", () => {
-    const open = nav.classList.toggle("open");
-    menuButton.setAttribute("aria-expanded", String(open));
-  });
-
-  nav.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => {
-    nav.classList.remove("open");
-    menuButton.setAttribute("aria-expanded", "false");
-  }));
-
-  render();
 })();
