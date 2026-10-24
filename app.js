@@ -14,58 +14,15 @@
   let query = "";
   let filter = "all";
 
-  const normalize = (value) => String(value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase("pt-BR")
-    .replace(/[^a-z0-9\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  // Levenshtein distance: helps match small typos without pretending to understand every query.
-  function editDistance(a, b) {
-    if (a === b) return 0;
-    if (!a.length) return b.length;
-    if (!b.length) return a.length;
-    let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
-    for (let i = 1; i <= a.length; i += 1) {
-      const current = [i];
-      for (let j = 1; j <= b.length; j += 1) {
-        current[j] = Math.min(
-          current[j - 1] + 1,
-          previous[j] + 1,
-          previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
-        );
-      }
-      previous = current;
-    }
-    return previous[b.length];
-  }
-
-  function tokenMatches(queryToken, targetToken) {
-    if (targetToken.includes(queryToken) || queryToken.includes(targetToken)) return true;
-    if (queryToken.length < 4 || targetToken.length < 4) return false;
-    const distance = editDistance(queryToken, targetToken);
-    return distance <= (Math.max(queryToken.length, targetToken.length) >= 8 ? 2 : 1);
-  }
+  const searchCore = window.FonteVivaSearch;
+  if (!searchCore) throw new Error("O núcleo de busca FonteViva não foi carregado.");
 
   function scoreClaim(claim, rawQuery) {
-    const q = normalize(rawQuery);
-    if (!q) return 1;
-    const searchable = normalize([
+    const searchable = [
       claim.claim, claim.summary, claim.detail,
       ...(claim.tags || []), ...(claim.sources || []).map((source) => source.label)
-    ].join(" "));
-    if (searchable.includes(q)) return 100;
-    const queryTokens = q.split(" ").filter((token) => token.length > 1);
-    const targetTokens = [...new Set(searchable.split(" "))];
-    if (!queryTokens.length) return 0;
-    let score = 0;
-    for (const token of queryTokens) {
-      if (targetTokens.some((candidate) => candidate === token)) score += 4;
-      else if (targetTokens.some((candidate) => tokenMatches(token, candidate))) score += 2;
-    }
-    return score / queryTokens.length;
+    ].join(" ");
+    return searchCore.scoreText(rawQuery, searchable);
   }
 
   function escapeHtml(value) {
