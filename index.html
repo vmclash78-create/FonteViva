@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f4">
+  <meta name="description" content="Investigue alegações com fontes rastreáveis, contexto e transparência.">
+  <title>FonteViva — Informação verificável</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="data/claims.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="FonteViva, página inicial">
+      <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span>Fonte<span class="brand-accent">Viva</span></span>
+    </a>
+    <nav class="topnav" aria-label="Navegação principal">
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#metodologia">Metodologia</a>
+      <a class="nav-cta" href="#resultados">Explorar checagens <span aria-hidden="true">↗</span></a>
+    </nav>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu" aria-expanded="false">Menu</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="status-dot"></span> CHECAGEM COM TRANSPARÊNCIA</div>
+        <h1>Antes de acreditar,<br><em>encontre a fonte.</em></h1>
+        <p class="hero-description">Investigue afirmações com contexto, evidências e referências rastreáveis. Sem atalhos entre uma dúvida e uma conclusão.</p>
+        <form id="search-form" class="search-form" role="search">
+          <label class="sr-only" for="search-input">O que você quer verificar?</label>
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input id="search-input" name="q" type="search" placeholder="Digite uma afirmação ou uma dúvida..." autocomplete="off">
+          <button type="submit">Pesquisar <span aria-hidden="true">→</span></button>
+        </form>
+        <div class="search-hint"><span class="hint-symbol">i</span> A busca atual pesquisa registros locais de demonstração.</div>
+      </div>
+      <div class="hero-visual" aria-label="Ilustração abstrata de fontes conectadas">
+        <div class="visual-orbit orbit-one"></div>
+        <div class="visual-orbit orbit-two"></div>
+        <div class="visual-core"><span class="core-check">✓</span><span>FONTE<br>VERIFICÁVEL</span></div>
+        <div class="floating-note note-top"><span class="note-icon">↗</span><span><b>Fontes abertas</b><small>Confira a origem</small></span></div>
+        <div class="floating-note note-bottom"><span class="note-icon note-green">≡</span><span><b>Contexto completo</b><small>Leia além da manchete</small></span></div>
+        <div class="visual-label">EVIDÊNCIA · CONTEXTO · CLAREZA</div>
+      </div>
+    </section>
+
+    <section class="results-section" id="resultados">
+      <div class="section-heading">
+        <div><div class="eyebrow">CENTRAL DE CHECAGEM</div><h2>Investigue uma afirmação</h2></div>
+        <span class="demo-label"><span></span> AMBIENTE DE DEMONSTRAÇÃO</span>
+      </div>
+      <div class="toolbar">
+        <div class="filter-tabs" role="group" aria-label="Filtrar por classificação">
+          <button class="filter-tab active" data-filter="all" aria-pressed="true">Todas</button>
+          <button class="filter-tab" data-filter="true" aria-pressed="false">Verdadeira</button>
+          <button class="filter-tab" data-filter="false" aria-pressed="false">Falsa</button>
+          <button class="filter-tab" data-filter="partial" aria-pressed="false">Parcial</button>
+          <button class="filter-tab" data-filter="uncertain" aria-pressed="false">Inconclusiva</button>
+        </div>
+        <span id="result-count" class="result-count" aria-live="polite"></span>
+      </div>
+      <div id="results-list" class="results-list" aria-live="polite"></div>
+      <div id="empty-state" class="empty-state" hidden>
+        <div class="empty-symbol">⌕</div><h3>Nenhum registro encontrado</h3>
+        <p>Tente outros termos ou remova o filtro. Uma busca sem resultado não significa que a afirmação seja falsa.</p>
+        <button id="clear-search" class="text-button">Limpar pesquisa <span aria-hidden="true">→</span></button>
+      </div>
+      <p class="results-disclaimer">Os exemplos desta versão demonstram a interface e não constituem checagens editoriais. Não use estes registros como orientação factual.</p>
+    </section>
+
+    <section class="principles-section" id="como-funciona">
+      <div class="principles-intro"><div class="eyebrow">NOSSO COMPROMISSO</div><h2>Uma conclusão precisa mostrar <em>como chegou lá.</em></h2><p>Não basta exibir um selo. É preciso explicar a evidência, mostrar suas limitações e permitir que qualquer pessoa confira as fontes.</p></div>
+      <div class="principle-grid">
+        <article class="principle-card"><span class="principle-number">01</span><div class="principle-icon">↗</div><h3>Fontes rastreáveis</h3><p>Links, autoria, data de publicação e tipo de fonte visíveis para quem lê.</p></article>
+        <article class="principle-card"><span class="principle-number">02</span><div class="principle-icon">≋</div><h3>Contexto importa</h3><p>Uma afirmação pode misturar fatos, omitir contexto ou distorcer um dado real.</p></article>
+        <article class="principle-card"><span class="principle-number">03</span><div class="principle-icon">◷</div><h3>Histórico público</h3><p>Correções e mudanças de conclusão devem deixar um registro compreensível.</p></article>
+      </div>
+    </section>
+
+    <section class="method-section" id="metodologia">
+      <div class="method-symbol">Fv.</div>
+      <div><div class="eyebrow">METODOLOGIA ABERTA</div><h2>Não sabemos tudo.<br><em>E dizemos quando não sabemos.</em></h2><p>FonteViva não deve forçar um veredito quando as fontes são insuficientes ou entram em conflito. A qualidade da checagem depende da evidência disponível, não da certeza com que uma resposta é escrita.</p><a class="method-link" href="METHODOLOGY.md">Conheça os critérios editoriais <span aria-hidden="true">↗</span></a></div>
+    </section>
+  </main>
+
+  <footer class="footer"><a class="brand footer-brand" href="./"><span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span><span>Fonte<span class="brand-accent">Viva</span></span></a><span>Informação verificável. Evidências abertas.</span><a href="https://github.com/vmclash78-create/FonteViva" target="_blank" rel="noreferrer">Código aberto em desenvolvimento ↗</a></footer>
+</body>
+</html>
