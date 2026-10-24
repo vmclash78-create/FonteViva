@@ -35,16 +35,16 @@ A interface não exige build. Os testes automatizados usam Node.js 20 ou superio
 
 ## Limites importantes
 
-Esta versão **não realiza busca na web em tempo real**, não consulta bases externas automaticamente e não deve ser apresentada como um sistema de verificação automática completo. A busca atual percorre apenas os registros locais de demonstração. Integrações futuras deverão usar provedores reais, expor a origem dos dados e falhar de forma explícita quando não houver evidência suficiente.
+A interface foi conectada a uma função de servidor que consulta a Brave Search API e monta consultas com prioridade para domínios oficiais por tema. Para executar a busca real, publique no Netlify e configure a variável `BRAVE_SEARCH_API_KEY`. Sem essa chave, o endpoint informa explicitamente que não está configurado; ele não inventa resultados. A busca ainda recupera páginas candidatas: não produz, sozinha, um veredito factual.
 
 ## Próximas etapas
 
-1. Integrar pesquisa real com fontes e links rastreáveis.
+1. Configurar `BRAVE_SEARCH_API_KEY` no ambiente de deploy.
 2. Criar pipeline de extração de alegações e recuperação de evidências.
 3. Implementar avaliação de contradições e suporte a múltiplas fontes.
 4. Criar painel editorial, trilha de auditoria e fluxo de correções.
-5. Adicionar testes automatizados e verificações de segurança.
-6. Desenvolver API e persistência para registros editoriais.
+5. Adicionar testes de integração e verificações de segurança.
+6. Desenvolver persistência para registros editoriais.
 
 ## Estrutura
 
@@ -54,7 +54,10 @@ Esta versão **não realiza busca na web em tempo real**, não consulta bases ex
 - `app.js` — filtros e renderização da interface.
 - `tests/search.test.mjs` — testes do núcleo de busca.
 - `.github/workflows/quality.yml` — verificações automatizadas no GitHub Actions.
-- `data/claims.js` — dados didáticos de demonstração.
+- `data/claims.js` — dados didáticos antigos, não usados como resultados da busca real.
+- `netlify/functions/search.mjs` — endpoint server-side para busca web com prioridade a domínios oficiais.
+- `netlify.toml` — configuração de deploy no Netlify.
+- `.env.example` — nome da variável necessária; nunca inclua a chave real no Git.
 - `METHODOLOGY.md` — critérios editoriais propostos.
 - `CONTRIBUTING.md` — orientações para contribuições.
 
