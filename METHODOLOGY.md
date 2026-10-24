@@ -61,4 +61,4 @@ Declarar vínculos relevantes, patrocínios e conflitos de interesse. Não permi
 
 ## 8. Status deste repositório
 
-Os cartões que acompanham o MVP são dados fictícios de demonstração. Eles não possuem fontes factuais vinculadas e não devem ser citados como checagens publicadas. O produto ainda não realiza pesquisa externa em tempo real.
+Os cartões que acompanham o MVP são dados fictícios de demonstração. Eles não possuem fontes factuais vinculadas e não devem ser citados como checagens publicadas. O produto consulta fontes externas públicas em tempo real, sem exigir chaves de API. A busca retorna páginas candidatas e metadados, não prova automaticamente a alegação.
