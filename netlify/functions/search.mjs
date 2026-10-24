@@ -1,93 +1,29 @@
-const TOPICS = {
-  geral: { label: "fontes oficiais e institucionais", domains: ["gov.br", "leg.br", "jus.br", "ibge.gov.br", "ipea.gov.br", "fiocruz.br", "who.int", "un.org"] },
-  governo: { label: "governo, legislação e órgãos públicos", domains: ["gov.br", "planalto.gov.br", "camara.leg.br", "senado.leg.br", "stf.jus.br", "stj.jus.br", "tse.jus.br", "jus.br"] },
-  saude: { label: "saúde pública e pesquisa médica", domains: ["gov.br", "saude.gov.br", "fiocruz.br", "anvisa.gov.br", "who.int", "paho.org", "pubmed.ncbi.nlm.nih.gov"] },
-  economia: { label: "estatísticas e instituições econômicas", domains: ["ibge.gov.br", "bcb.gov.br", "ipea.gov.br", "gov.br", "tesourotransparente.gov.br", "worldbank.org", "imf.org", "oecd.org"] },
-  ciencia: { label: "instituições científicas e publicações de pesquisa", domains: ["gov.br", "fiocruz.br", "inpe.br", "capes.gov.br", "pubmed.ncbi.nlm.nih.gov", "nature.com", "science.org", "who.int"] },
-  eleicoes: { label: "justiça eleitoral e órgãos oficiais", domains: ["tse.jus.br", "tre-ce.jus.br", "gov.br", "camara.leg.br", "senado.leg.br"] }
-};
-
-const json = (statusCode, body) => ({
-  statusCode,
-  headers: {
-    "content-type": "application/json; charset=utf-8",
-    "cache-control": "no-store",
-    "x-content-type-options": "nosniff"
-  },
-  body: JSON.stringify(body)
-});
-
-function makeSearchQuery(query, topic) {
-  const config = TOPICS[topic] || TOPICS.geral;
-  const officialDomains = config.domains.map((domain) => "site:" + domain).join(" OR ");
-  return { query: "(" + query.replace(/[\r\n]+/g, " ").slice(0, 250) + ") (" + officialDomains + ")", config };
+import { runSearch } from "../../lib/engine.mjs";
+import { normalize } from "../../lib/query.mjs";
+const BASE = { "content-type": "application/json; charset=utf-8", "x-content-type-options": "nosniff" };
+const reply = (status, body, cache = "no-store") => new Response(JSON.stringify(body), { status, headers: { ...BASE, "cache-control": cache } });
+const CACHE_TTL = 10 * 60 * 1000, CACHE_MAX = 200, RATE_MAX = 20, RATE_WINDOW = 60 * 1000;
+const cache = new Map(), hits = new Map();
+function limited(ip, now) {
+ const recent = (hits.get(ip) || []).filter((t) => now - t < RATE_WINDOW); recent.push(now); hits.set(ip, recent);
+ if (hits.size > 1000) { for (const [key, times] of hits) if (!times.length || now - times[times.length - 1] > RATE_WINDOW) hits.delete(key); while (hits.size > 5000) hits.delete(hits.keys().next().value); }
+ return recent.length > RATE_MAX;
 }
-
-export default async (request) => {
-  if (request.method !== "GET") return json(405, { error: "Método não permitido." });
-  const url = new URL(request.url);
-  const query = (url.searchParams.get("q") || "").trim();
-  const topic = (url.searchParams.get("topic") || "geral").toLowerCase();
-  if (query.length < 2) return json(400, { error: "Digite uma afirmação ou termos de pesquisa." });
-  if (query.length > 300) return json(400, { error: "A consulta é longa demais. Limite a pesquisa a 300 caracteres." });
-
-  const apiKey = process.env.BRAVE_SEARCH_API_KEY;
-  if (!apiKey) {
-    return json(503, {
-      error: "A pesquisa real ainda não está configurada no servidor. Defina BRAVE_SEARCH_API_KEY nas variáveis de ambiente do Netlify para habilitar consultas externas."
-    });
-  }
-
-  const { query: searchQuery, config } = makeSearchQuery(query, topic);
-  const endpoint = new URL("https://api.search.brave.com/res/v1/web/search");
-  endpoint.searchParams.set("q", searchQuery);
-  endpoint.searchParams.set("count", "10");
-  endpoint.searchParams.set("country", "BR");
-  endpoint.searchParams.set("search_lang", "pt-br");
-  endpoint.searchParams.set("safesearch", "moderate");
-
-  let response;
-  try {
-    response = await fetch(endpoint, {
-      headers: { "Accept": "application/json", "X-Subscription-Token": apiKey },
-      signal: AbortSignal.timeout(12000)
-    });
-  } catch {
-    return json(502, { error: "Não foi possível alcançar o provedor de busca. Tente novamente mais tarde." });
-  }
-  if (response.status === 401 || response.status === 403) {
-    return json(502, { error: "O provedor de busca recusou a chave configurada. Confira BRAVE_SEARCH_API_KEY no Netlify." });
-  }
-  if (response.status === 429) {
-    return json(429, { error: "O limite de consultas do provedor foi atingido. Aguarde e tente novamente." });
-  }
-  if (!response.ok) return json(502, { error: "O provedor de busca retornou um erro (" + response.status + ")." });
-
-  let data;
-  try { data = await response.json(); }
-  catch { return json(502, { error: "O provedor retornou uma resposta inválida." }); }
-
-  const results = (data.web?.results || []).slice(0, 10).map((item) => {
-    let domain = "";
-    try { domain = new URL(item.url).hostname.replace(/^www\./, ""); } catch {}
-    const isOfficial = config.domains.some((d) => domain === d || domain.endsWith("." + d));
-    return {
-      title: String(item.title || "").slice(0, 300),
-      url: item.url,
-      domain,
-      snippet: String(item.description || "").slice(0, 1200),
-      date: item.page_age || item.published || item.extra_snippets?.[0]?.published || null,
-      sourceType: isOfficial ? "Domínio priorizado" : "Resultado externo"
-    };
-  }).filter((item) => /^https?:\/\//i.test(item.url || ""));
-
-  return json(200, {
-    provider: "Brave Search API",
-    topicLabel: config.label,
-    results,
-    searchedAt: new Date().toISOString(),
-    note: "Resultados de pesquisa são pistas para investigação, não vereditos factuais."
-  });
+export default async (request, context) => {
+ if (request.method !== "GET") return reply(405, { error: "Método não permitido." });
+ const now = Date.now(), ip = context?.ip || request.headers.get("x-nf-client-connection-ip") || "anon";
+ if (limited(ip, now)) return reply(429, { error: "Muitas pesquisas em pouco tempo. Aguarde um minuto e tente novamente." });
+ const url = new URL(request.url), query = (url.searchParams.get("q") || "").trim(), topic = (url.searchParams.get("topic") || "geral").toLowerCase();
+ if (query.length < 2) return reply(400, { error: "Digite uma afirmação ou termos de pesquisa." });
+ if (query.length > 300) return reply(400, { error: "A consulta é longa demais. Limite a pesquisa a 300 caracteres." });
+ const key = topic + "|" + normalize(query), hit = cache.get(key);
+ if (hit && now - hit.at < CACHE_TTL) return reply(200, { ...hit.payload, cached: true }, "public, max-age=300");
+ let payload;
+ try { payload = await runSearch({ query, topic, env: process.env }); }
+ catch { return reply(502, { error: "Erro inesperado ao pesquisar. Tente novamente." }); }
+ if (!payload.providers.some((p) => p.ok)) return reply(503, { error: "Nenhuma fonte respondeu agora. Tente novamente em instantes.", providers: payload.providers });
+ const out = { ...payload, provider: payload.providers.filter((p) => p.ok).map((p) => p.name).join(", ") };
+ if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value);
+ cache.set(key, { at: now, payload: out });
+ return reply(200, out, "public, max-age=300");
 };
-
-export const __test = { makeSearchQuery, TOPICS };

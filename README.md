@@ -18,48 +18,58 @@ FonteViva é uma plataforma de checagem de alegações projetada para ajudar pes
 ## O que existe neste MVP
 
 - Interface responsiva em português.
-- Busca tolerante a erros comuns de digitação e correspondência aproximada.
-- Filtros por veredito.
-- Cartões de alegações com status, contexto e marcadores de fonte demonstrativos.
-- Indicação explícita de conteúdo demonstrativo.
-- Estrutura inicial para metodologia e contribuição editorial.
+- Busca gratuita, sem chave de API, cartão ou assinatura:
+  - **Câmara dos Deputados:** proposições e projetos de lei por dados abertos.
+  - **IBGE:** notícias e publicações estatísticas oficiais.
+  - **Banco Central:** indicadores econômicos, como Selic, IPCA e dólar, quando relacionados à consulta.
+  - **Wikipédia:** somente para contexto, claramente separada de evidências.
+  - **GDELT:** busca aberta de notícias e páginas na web, incluindo domínios de checagem.
+- Extração de números, nomes e palavras-chave da fala, com detecção automática de assunto.
+- Ranking heurístico, priorização de fontes oficiais e remoção de duplicatas.
+- Cache de 10 minutos e limite de melhor esforço de 20 pesquisas por minuto por IP.
+- Se uma fonte falhar, as outras continuam; a interface informa o estado de cada fonte.
 
-## Executar localmente
+## Executar e publicar
 
-A interface não exige build. Os testes automatizados usam Node.js 20 ou superior.
+Requer Node.js 20 ou superior.
 
-1. Clone o repositório.
-2. Abra `index.html` no navegador, ou sirva a pasta com um servidor HTTP local.
-3. Para validar o código e executar os testes de busca, rode `npm run check` e `npm test`.
-4. Para publicar como site estático, configure GitHub Pages para usar a branch `main` e a pasta raiz.
+```bash
+npm run check
+npm test
+```
 
-## Limites importantes
+Para publicar, importe o repositório no Netlify. A função de servidor fica em `netlify/functions/search.mjs`. **Nenhuma variável de ambiente ou chave de API é obrigatória.** Os provedores usam endpoints públicos gratuitos, sujeitos aos limites e à disponibilidade de cada serviço.
 
-A interface foi conectada a uma função de servidor que consulta a Brave Search API e monta consultas com prioridade para domínios oficiais por tema. Para executar a busca real, publique no Netlify e configure a variável `BRAVE_SEARCH_API_KEY`. Sem essa chave, o endpoint informa explicitamente que não está configurado; ele não inventa resultados. A busca ainda recupera páginas candidatas: não produz, sozinha, um veredito factual.
+## Limitações importantes
+
+- **Cobertura:** as fontes oficiais cobrem temas específicos. O GDELT amplia a busca, mas não é ilimitado e pode deixar de encontrar páginas relevantes.
+- **Ranking heurístico:** a ordem indica proximidade com a pesquisa, não que a página confirme a alegação. Encontrar o mesmo número ou palavra não é prova.
+- **Indicadores:** se a fala cita um ano (ou mês e ano), a consulta ao Banco Central usa esse período. Sem período, o valor mostrado é o mais recente e não comprova alegações sobre outras datas.
+- **Cache e limite de pesquisas:** ficam na memória de cada instância serverless; podem desaparecer e não são compartilhados globalmente.
+- **Falha não é ausência de evidência:** a interface diferencia fonte indisponível de fonte consultada sem resultados. Nenhuma das duas situações prova que a alegação seja falsa.
+- **Wikipédia:** aparece em seção separada de contexto e nunca é tratada como fonte primária.
+- **Sem vereditos automáticos:** o sistema não transforma resultados de busca em “verdadeiro” ou “falso”.
+
+A busca recupera **páginas candidatas**; ela não produz, sozinha, um veredito factual. Os resumos exibidos são metadados e trechos fornecidos pelas fontes, não uma leitura integral do documento.
 
 ## Próximas etapas
 
-1. Configurar `BRAVE_SEARCH_API_KEY` no ambiente de deploy.
-2. Criar pipeline de extração de alegações e recuperação de evidências.
-3. Implementar avaliação de contradições e suporte a múltiplas fontes.
+1. Ler o conteúdo das páginas e extrair trechos que sustentem ou contradigam a fala.
+2. Avaliar contradições entre fontes e justificar conclusões proporcionais à evidência.
+3. Integrar mais fontes oficiais, como SIDRA/IBGE, Portal da Transparência e TSE.
 4. Criar painel editorial, trilha de auditoria e fluxo de correções.
-5. Adicionar testes de integração e verificações de segurança.
-6. Desenvolver persistência para registros editoriais.
 
 ## Estrutura
 
-- `index.html` — estrutura da aplicação.
-- `styles.css` — design responsivo e componentes visuais.
-- `search-core.js` — normalização e correspondência aproximada, compartilhadas com os testes.
-- `app.js` — filtros e renderização da interface.
-- `tests/search.test.mjs` — testes do núcleo de busca.
-- `.github/workflows/quality.yml` — verificações automatizadas no GitHub Actions.
-- `data/claims.js` — dados didáticos antigos, não usados como resultados da busca real.
-- `netlify/functions/search.mjs` — endpoint server-side para busca web com prioridade a domínios oficiais.
-- `netlify.toml` — configuração de deploy no Netlify.
-- `.env.example` — nome da variável necessária; nunca inclua a chave real no Git.
-- `METHODOLOGY.md` — critérios editoriais propostos.
-- `CONTRIBUTING.md` — orientações para contribuições.
+- `index.html`, `styles.css`, `app.js`: interface.
+- `lib/query.mjs`: extração de números, entidades e palavras-chave.
+- `lib/providers.mjs`: conectores das fontes gratuitas.
+- `lib/engine.mjs`: execução paralela, ranking e deduplicação.
+- `lib/topics.mjs`: assuntos e domínios oficiais.
+- `search-core.js`: normalização e correspondência aproximada.
+- `netlify/functions/search.mjs`: endpoint, cache e limite de requisições.
+- `tests/`: testes automatizados (GitHub Actions).
+- `METHODOLOGY.md`, `CONTRIBUTING.md`: critérios editoriais e contribuição.
 
 ## Licença
 
