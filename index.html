@@ -31,14 +31,16 @@
       <div class="hero-copy">
         <div class="eyebrow"><span class="status-dot"></span> CHECAGEM COM TRANSPARÊNCIA</div>
         <h1>Antes de acreditar,<br><em>encontre a fonte.</em></h1>
-        <p class="hero-description">Investigue afirmações com contexto, evidências e referências rastreáveis. Sem atalhos entre uma dúvida e uma conclusão.</p>
+        <p class="hero-description">Pesquise documentos, dados e comunicados publicados por órgãos oficiais e instituições reconhecidas. Confira a fonte original antes de tirar conclusões.</p>
         <form id="search-form" class="search-form" role="search">
           <label class="sr-only" for="search-input">O que você quer verificar?</label>
           <span class="search-icon" aria-hidden="true">⌕</span>
-          <input id="search-input" name="q" type="search" placeholder="Digite uma afirmação ou uma dúvida..." autocomplete="off">
-          <button type="submit">Pesquisar <span aria-hidden="true">→</span></button>
+          <input id="search-input" name="q" type="search" placeholder="Ex.: inflação no Brasil em 2025..." autocomplete="off" maxlength="300" required>
+          <label class="sr-only" for="source-topic">Tipo de fonte</label>
+          <select id="source-topic" name="topic" aria-label="Priorizar fontes oficiais por assunto"><option value="geral">Geral</option><option value="governo">Governo e legislação</option><option value="saude">Saúde</option><option value="economia">Economia e indicadores</option><option value="ciencia">Ciência e pesquisa</option><option value="eleicoes">Eleições</option></select>
+          <button id="search-button" type="submit">Buscar fontes <span aria-hidden="true">→</span></button>
         </form>
-        <div class="search-hint"><span class="hint-symbol">i</span> A busca atual pesquisa registros locais de demonstração.</div>
+        <div class="search-hint"><span class="hint-symbol">i</span> Consulta fontes reais pela web, priorizando domínios oficiais conforme o assunto. A disponibilidade depende da configuração do serviço de busca.</div>
       </div>
       <div class="hero-visual" aria-label="Ilustração abstrata de fontes conectadas">
         <div class="visual-orbit orbit-one"></div>
@@ -52,26 +54,17 @@
 
     <section class="results-section" id="resultados">
       <div class="section-heading">
-        <div><div class="eyebrow">CENTRAL DE CHECAGEM</div><h2>Investigue uma afirmação</h2></div>
-        <span class="demo-label"><span></span> AMBIENTE DE DEMONSTRAÇÃO</span>
+        <div><div class="eyebrow">PESQUISA EM FONTES REAIS</div><h2>Resultados encontrados</h2></div>
+        <span id="search-mode-label" class="demo-label"><span></span> FONTES OFICIAIS PRIORIZADAS</span>
       </div>
-      <div class="toolbar">
-        <div class="filter-tabs" role="group" aria-label="Filtrar por classificação">
-          <button class="filter-tab active" data-filter="all" aria-pressed="true">Todas</button>
-          <button class="filter-tab" data-filter="true" aria-pressed="false">Verdadeira</button>
-          <button class="filter-tab" data-filter="false" aria-pressed="false">Falsa</button>
-          <button class="filter-tab" data-filter="partial" aria-pressed="false">Parcial</button>
-          <button class="filter-tab" data-filter="uncertain" aria-pressed="false">Inconclusiva</button>
-        </div>
-        <span id="result-count" class="result-count" aria-live="polite"></span>
-      </div>
+      <div id="search-summary" class="search-summary" aria-live="polite">Faça uma pesquisa para consultar documentos e páginas originais.</div>
       <div id="results-list" class="results-list" aria-live="polite"></div>
       <div id="empty-state" class="empty-state" hidden>
-        <div class="empty-symbol">⌕</div><h3>Nenhum registro encontrado</h3>
-        <p>Tente outros termos ou remova o filtro. Uma busca sem resultado não significa que a afirmação seja falsa.</p>
-        <button id="clear-search" class="text-button">Limpar pesquisa <span aria-hidden="true">→</span></button>
+        <div class="empty-symbol">⌕</div><h3>Nenhum resultado disponível</h3>
+        <p>Isso não prova que a afirmação seja falsa. Tente reformular a busca ou escolher outra categoria de fontes.</p>
+        <button id="clear-search" class="text-button" type="button">Limpar pesquisa <span aria-hidden="true">→</span></button>
       </div>
-      <p class="results-disclaimer">Os exemplos desta versão demonstram a interface e não constituem checagens editoriais. Não use estes registros como orientação factual.</p>
+      <p class="results-disclaimer">Os resultados são páginas recuperadas de fontes externas, não vereditos automáticos. Confira o documento original, a data, o contexto e se a evidência sustenta a alegação.</p>
     </section>
 
     <section class="principles-section" id="como-funciona">
