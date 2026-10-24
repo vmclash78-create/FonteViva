@@ -20,17 +20,18 @@ FonteViva é uma plataforma de checagem de alegações projetada para ajudar pes
 - Interface responsiva em português.
 - Busca tolerante a erros comuns de digitação e correspondência aproximada.
 - Filtros por veredito.
-- Páginas de resultado com justificativa, nível de evidência e fontes.
+- Cartões de alegações com status, contexto e marcadores de fonte demonstrativos.
 - Indicação explícita de conteúdo demonstrativo.
 - Estrutura inicial para metodologia e contribuição editorial.
 
 ## Executar localmente
 
-Não há etapa de build nem dependências externas nesta versão.
+A interface não exige build. Os testes automatizados usam Node.js 20 ou superior.
 
 1. Clone o repositório.
 2. Abra `index.html` no navegador, ou sirva a pasta com um servidor HTTP local.
-3. Para publicar como site estático, configure GitHub Pages para usar a branch `main` e a pasta raiz.
+3. Para validar o código e executar os testes de busca, rode `npm run check` e `npm test`.
+4. Para publicar como site estático, configure GitHub Pages para usar a branch `main` e a pasta raiz.
 
 ## Limites importantes
 
@@ -49,7 +50,10 @@ Esta versão **não realiza busca na web em tempo real**, não consulta bases ex
 
 - `index.html` — estrutura da aplicação.
 - `styles.css` — design responsivo e componentes visuais.
-- `app.js` — busca aproximada, filtros e renderização.
+- `search-core.js` — normalização e correspondência aproximada, compartilhadas com os testes.
+- `app.js` — filtros e renderização da interface.
+- `tests/search.test.mjs` — testes do núcleo de busca.
+- `.github/workflows/quality.yml` — verificações automatizadas no GitHub Actions.
 - `data/claims.js` — dados didáticos de demonstração.
 - `METHODOLOGY.md` — critérios editoriais propostos.
 - `CONTRIBUTING.md` — orientações para contribuições.
