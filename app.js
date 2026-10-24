@@ -8,6 +8,8 @@
   const clearButton = document.querySelector("#clear-search");
   const summary = document.querySelector("#search-summary");
   const searchButton = document.querySelector("#search-button");
+  const menuToggle = document.querySelector("#menu-toggle");
+  const mainNavigation = document.querySelector("#main-navigation");
   let controller = null;
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -64,6 +66,19 @@
       showError(error.message || "Não foi possível consultar a pesquisa externa.");
     } finally { searchButton.disabled = false; searchButton.removeAttribute("aria-busy"); }
   }
+  menuToggle.addEventListener("click", () => {
+    const expanded = menuToggle.getAttribute("aria-expanded") === "true";
+    menuToggle.setAttribute("aria-expanded", String(!expanded));
+    menuToggle.setAttribute("aria-label", expanded ? "Abrir menu" : "Fechar menu");
+    mainNavigation.classList.toggle("open", !expanded);
+  });
+  mainNavigation.addEventListener("click", (event) => {
+    if (event.target.closest("a")) {
+      mainNavigation.classList.remove("open");
+      menuToggle.setAttribute("aria-expanded", "false");
+      menuToggle.setAttribute("aria-label", "Abrir menu");
+    }
+  });
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const query = input.value.trim().slice(0, 300);

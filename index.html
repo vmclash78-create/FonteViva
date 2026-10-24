@@ -8,7 +8,6 @@
   <title>FonteViva — Informação verificável</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
-  <script src="data/claims.js" defer></script>
   <script src="search-core.js" defer></script>
   <script src="app.js" defer></script>
 </head>
@@ -18,12 +17,12 @@
       <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
       <span>Fonte<span class="brand-accent">Viva</span></span>
     </a>
-    <nav class="topnav" aria-label="Navegação principal">
+    <nav class="topnav" id="main-navigation" aria-label="Navegação principal">
       <a href="#como-funciona">Como funciona</a>
       <a href="#metodologia">Metodologia</a>
-      <a class="nav-cta" href="#resultados">Explorar checagens <span aria-hidden="true">↗</span></a>
+      <a class="nav-cta" href="#resultados">Pesquisar fontes <span aria-hidden="true">↗</span></a>
     </nav>
-    <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu" aria-expanded="false">Menu</button>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu" aria-controls="main-navigation" aria-expanded="false">Menu</button>
   </header>
 
   <main>

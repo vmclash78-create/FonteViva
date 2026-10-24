@@ -4,7 +4,7 @@
 
 FonteViva é uma plataforma de checagem de alegações projetada para ajudar pessoas a investigar afirmações com transparência. Em vez de tratar uma resposta automática como verdade, o produto organiza alegações, fontes, datas, evidências, limitações e histórico de revisão.
 
-> **Estado do projeto:** MVP inicial em desenvolvimento. Os registros demonstrativos da interface são exemplos didáticos, não checagens editoriais publicadas.
+> **Estado do projeto:** MVP inicial em desenvolvimento. A pesquisa retorna páginas candidatas e não publica vereditos editoriais automáticos.
 
 ## Princípios do produto
 
@@ -68,7 +68,7 @@ A busca recupera **páginas candidatas**; ela não produz, sozinha, um veredito 
 - `lib/topics.mjs`: assuntos e domínios oficiais.
 - `search-core.js`: normalização e correspondência aproximada.
 - `netlify/functions/search.mjs`: endpoint, cache e limite de requisições.
-- `tests/`: testes automatizados (GitHub Actions).
+- `tests/`: testes automatizados de consulta, provedores, ranking e endpoint; executados no GitHub Actions.
 - `METHODOLOGY.md`, `CONTRIBUTING.md`: critérios editoriais e contribuição.
 
 ## Licença
