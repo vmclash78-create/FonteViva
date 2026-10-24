@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import search from "../search-core.js";
+import "../search-core.js";
+const search = globalThis.FonteVivaSearch;
 
 test("normaliza acentos, maiúsculas e pontuação", () => {
   assert.equal(search.normalize("VACINAÇÃO, Saúde!"), "vacinacao saude");
