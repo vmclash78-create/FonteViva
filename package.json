@@ -1,0 +1,14 @@
+{
+  "name": "fonteviva",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plataforma transparente para investigar alegações com evidências rastreáveis",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check app.js && node --check search-core.js && node --check data/claims.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
